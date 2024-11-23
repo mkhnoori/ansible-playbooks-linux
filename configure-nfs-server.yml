@@ -1,0 +1,33 @@
+---
+# setup nfs server to share a directory across clients
+
+- name: configure nfs server
+  hosts: all
+  become: yes
+
+  vars:
+    shared_directory: /srv/shared
+    allowed_clients: 192.168.1.0/24
+
+  tasks:
+    - name: install nfs server
+      apt:
+        name: nfs-server
+        state: present
+
+    - name: create a shared directory
+      file:
+        path: "{{shared_directory}}"
+        state: directory
+        mode: 0755
+
+    - name: configure nfs exports
+      lineinfile:
+        path: /etc/expoets
+        line: "{{shared_directory}} {{allowed_clients}}(rw,sync,no_root_squash)"
+        create: yes
+
+    - name: restart nfs service
+      service:
+        name: nfs-server
+        state: restarted

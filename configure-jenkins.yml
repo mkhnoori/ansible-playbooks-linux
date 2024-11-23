@@ -1,0 +1,41 @@
+---
+# install and configure jenkins ci/cd tool
+
+- name: install and configure jenkins
+  hosts: all 
+  become: true 
+
+  vars:
+    jenkins_repo_key: https://pkg.jenkins.io/debian/jenkins.io.key
+    jenkins_repo_url: deb http://pkg.jenkins.io/debian-stable binary/
+    java_package: openjdk-21-jdk
+
+  tasks:
+    - name: install java 
+      apt:
+        name: "{{java_package}}"
+        state: present 
+
+    - name: add jenkins repository key 
+      apt_repository:
+        repo: "{{jenkins_repo_url}}"
+        state: prsent 
+
+    - name: install jenkins
+      apt:
+        name: jenkins
+        state: present 
+
+    - name: start jenkins 
+      service:
+        name: jenkins 
+        status: started 
+        enabled: true 
+
+    - name: display initial admin password 
+      command: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_password
+
+    - name: output jenkins password
+      debug:
+        var: jenkins_password.stdout

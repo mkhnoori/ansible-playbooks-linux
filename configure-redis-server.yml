@@ -1,0 +1,31 @@
+---
+# install and configure a redis instance
+
+- name: install and configure redis 
+  hosts: all 
+  become: true 
+
+  vars:
+    redis_bind: 127.0.0.1
+    redis_port: 6379
+
+  tasks:
+    - name: install redis 
+      apt:
+        name: redis-server
+        state: present 
+
+    - name: configure redis 
+      lineinfile:
+        path: /etc/redis/redis.conf
+        regexp: "{{item.regexp}}"
+        line: "{{item.line}}"
+      with_items:
+        - {regexp: '^bind', line: "bind {{redis_bind}}"}
+        - {regexp: '^port', line: "port {{redis_port}}"}
+
+    - name: restart redis 
+      service:
+        name: redis-server
+        state: restarted
+        enabled: true 

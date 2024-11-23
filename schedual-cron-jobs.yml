@@ -1,0 +1,15 @@
+---
+# setup and manage cron jobs using ansible
+
+- name: configure cron jobs
+  hosts: all
+  become: true
+
+  tasks:
+    - name: scheduale a cron job to clear temp files
+      cron:
+        name: clear temporary files
+        minute: "0"
+        hour: "3"
+        job: "find /tmp -type f -mtime +7 -exec rm -f {} \\;"
+        

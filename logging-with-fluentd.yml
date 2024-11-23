@@ -1,0 +1,42 @@
+---
+# install fluentd and configure it to forward logs to a remote server
+
+- name: set up fluentd for log aggregation
+  hosts: all
+  become: true
+
+  vars:
+    fluentd_config_path: /etc/td-agent/td-agent.conf
+    remote_log_server: 192.168.1.200
+
+  tasks:
+    - name: install fluentd (td-agent)
+      apt:
+        name: td-agent
+        state: present
+
+    - name: configure fluentd
+      copy:
+        dest: "{{fluentd_config_path}}"
+        content:
+          <source>
+            @type tail
+            path /var/log/syslog
+            pos_file /var/log/td-agent/syslog.pos
+            tag system.syslog
+            format syslog
+          </source>
+          <match **>
+            @type forward
+            <server>
+              host {{remote_log_server}}
+              port 24224
+            </server>
+          </match>
+      notify: restart fluentd
+
+  handlers: 
+    - name: restart fluentd
+      service:
+        name: td-agent
+        state: restarted

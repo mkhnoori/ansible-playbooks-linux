@@ -1,0 +1,62 @@
+---
+# setup a monitoring server with promrtheus
+
+- name: install and configure prometheus
+  hosts: all
+  become: true
+
+  vars:
+    prometheus_version: "2.46.0"
+    prometheus_dir: /etc/prometheus
+
+  tasks:
+    - name: download prometheus tarball
+      get_url:
+        url: "https://github.com/prometheus/prometheus/releasees/download/v{{prometheus_version}}/prometheus-{{prometheus_version}}.linux-amd64.tar.gz"
+        dest: /tmp/prometheus.tar.gz
+
+    - name: extract prometheus tarball
+      unarchive:
+        src: /tmp/prometheus.tar.gz
+        dest: /opt/
+        remote_src: yes
+
+    - name: move prometheus binaries
+      command: mv /opt/prometheus-{{prometheus_version}}.linux-amd64/{prometheus,promtool} /usr/local/bin/
+
+    - name: create prometheus config directory
+      file:
+        path: "{{prometheus_dir}}"
+        state: directory
+        mode: "0755"
+
+    - name: copy prometheus config files
+      copy:
+        dest: "{{prometheus_dir}}/prometheus.yml"
+        content: |
+          global:
+            scrape_interval: 15s
+          scrape_configs:
+            - job_name: "node"
+              static_configs:
+                - targets: ['localhost:9090']
+
+    - name: create a prometheus service
+      copy:
+        dest: /etc/systemd/system/prometheus.service
+        content: |
+          [unit]
+          Description=Prometheus
+          After=network.target
+          [service]
+          ExecStart=/usr/local/bin/prometheus --config.file=/etc/prometheus/prometheus.yml
+          Restart=always
+          User=root
+          [install]
+          wantedBy=multi-user.target
+
+    - name: start prometheus
+      systemd:
+        name: prometheus
+        state: started
+        enabled: true

@@ -1,0 +1,27 @@
+---
+# setup an automated backup solution using rsync to synchronize files to a remote server
+
+- name: configure backup with rsync
+  hosts: all
+  become: true
+
+  vars:
+    backup_source: /var/www/html
+    backup_destination: "/backup/{{invintory_hostname}}"
+    remote_server: backup.example.com
+
+  tasks:
+    - name: install rsync
+      apt:
+        name: rsync
+        state: present
+
+    - name: create a local backup directory
+      file:
+        path: "{{backup_destination}}"
+        state: directory
+
+    - name: sync files to the remote server
+      command: >
+        rsync -avz {{backup_source}}
+        {{remote_server}}:{{backup_destination}}
