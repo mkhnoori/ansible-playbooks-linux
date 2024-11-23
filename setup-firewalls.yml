@@ -1,0 +1,30 @@
+---
+# configure basic firewall rules to secure your system
+
+- name: configure firewall
+  hosts: all
+  become: true
+
+  tasks:
+    - name: install UFW
+      apt:
+        name: ufw
+        atate: present
+
+    - name: allow ssh
+      ufw:
+        rule: allow
+        name: openssh
+
+    - name: allow http and https
+      ufw:
+        rue: allow
+        port: "{{item}}"
+        proto: tcp
+      with_items:
+        - 80
+        - 443
+
+    - name: enable UFW
+      state: enabled
+      logging: on

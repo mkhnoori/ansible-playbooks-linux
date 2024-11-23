@@ -1,0 +1,33 @@
+---
+# create users, set thier passwords, and manage ssh access
+
+- name: create and manage users
+  hosts: all
+  become: true
+
+  vars:
+    users:
+      - name: deploy
+        password: "{{'your-password' | password_hash('sha512')}}"
+        groups: sudo
+        shell: /bin/bash
+
+  tasks: 
+    - name: ensure the user exists
+      user:
+        name: "{{item.name}}"
+        password: "{{item.password}}"
+        groups: "{{item.groups}}"
+        shell: "{{item.shell}}"
+        state: present
+      with_item: "{{users}}"
+
+    - name: add public keys for each user
+      copy:
+        content: "sha-rsa AAAAB3...your-public-key"
+        dest: "/home/{{item.name}}/.ssh/authorized_keys"
+        mode: "0600"
+        owner: "{{item.name}}"
+        group: "{{item.name}}"
+      with_item: "{{users}}"
+      

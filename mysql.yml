@@ -1,0 +1,43 @@
+---
+# install mysql secure it and create a database with a user
+
+- name: configure mysql
+  hosts: all
+  become: true
+
+  vars:
+    mysql_root_password: "khalid"
+    mysql_user: "admin"
+    mysql_password: "khalid"
+    mysql_database: "appdb"
+
+  tasks:
+    - name: install mysql
+      apt:
+        name: mysql-server
+        state: present
+
+    - name: start mysql service
+      service:
+        name: mysql
+        state: started
+        enabled: true
+
+    - name: set mysql root password
+      mysql_user:
+        name: root
+        password: "{{mysql_root_password}}"
+        host_all: true
+        priv: '*.*:ALL,GRANT'
+
+    - name: create a database
+      mysql_db: 
+        name: "{{mysql_database}}"
+        state: present
+
+    - name: create a mysql user
+      mysql_user:
+        name: "{{mysql_user}}"
+        password: "{{mysql_password}}"
+        priv: "{{mysql_database}}.*:ALL"
+        state: present

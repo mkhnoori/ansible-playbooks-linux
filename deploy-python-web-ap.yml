@@ -1,0 +1,46 @@
+---
+# install python set up a virtual environment and deploy a simple flask app
+
+- name: deploy a flask app
+  hosts: all
+  become: true
+
+  vars:
+    app_dir: /opt/flask_app
+
+  tasks:
+    - name: install python and pip
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+        state: present
+
+    - name: create the app dirctory
+      file:
+        path: "{{app_dir}}"
+        state: directory
+        mode: '0755'
+
+    - name: create a virtual environment
+      command:
+        cmd: python3 -m venv venv
+        chdir: "{{app_dir}}"
+
+    - name: install flask
+      pip:
+        dest: "{{app_dir}}/app.py"
+        content: |
+          from flask import Flask
+          app = Flask(__name__)
+          @app.route('/')
+          def home():
+            return "Hello, flask"
+          if __name__ == '__main__':
+            app.run(host='0.0.0.0', port=5000)
+
+    - name: run the flask app
+      command: "{{app_dir}}/venv/bin/python {{app_dir}}/app.py"
+      async: 5000
+      poll: 0

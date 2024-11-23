@@ -1,0 +1,27 @@
+---
+# setup HAproxy to load balance traffic between multiple backend servers
+
+- name: load balancer
+  hosts: all
+  become: true
+
+  vars:
+    backends:
+      - server1: 192.168.1.101
+      - server2: 192.168.1.102
+
+  tasks:
+    - name: install HAproxy
+      apt:
+        name: haproxy
+        state: present
+
+    - name: configure HAproxy
+      template:
+        src: haproxy.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+
+    - name: restart HAproxy
+      service:
+        name: haproxy
+        state: restarted

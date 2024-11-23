@@ -1,0 +1,25 @@
+---
+# install and insure a list of packages are present on your system
+
+- name: install essential packages
+  hosts: all
+  become: true
+
+  tasks: 
+    - name: ensure pacakges are installed
+      apt:
+        name:
+          - git
+          - curl
+          - wget
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: ensure packages are installed
+      yum:
+        name:
+          - git
+          - curl
+          - wget
+        state: present
+      when: ansible_os_family == "RedHat"

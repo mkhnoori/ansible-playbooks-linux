@@ -1,0 +1,24 @@
+---
+# install and configure a web server to serve static files or host websites.
+
+- name: configure web server
+  hosts: all
+  become: true
+
+  tasks:
+    - name: install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: ensure nginx is started and enabled
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: deploy a simple html file
+      copy:
+        dest: /var/www/html/ndex.html
+        content: "<h1>Welcom to nginx!</h1>"
+        
